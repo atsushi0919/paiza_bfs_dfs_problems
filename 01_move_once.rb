@@ -53,7 +53,7 @@ def solve(input_str)
     end
   end
   # グリッドを返す
-  grid
+  grid.map { |l| l.join }.join("\n")
 end
 
 p solve(INPUT1)
