@@ -1,15 +1,18 @@
-# 1 マスの移動 (paizaランク C 相当)
-# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__move_once
+# 3 マスの移動 (paizaランク B 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__move_three_times
 
 INPUT1 = <<~"EOS"
-  3 3
-  1 1
+  6 2
+  2 0
 EOS
 
 OUTPUT1 = <<~"EOS"
-  .*.
-  ***
-  .*.
+  **
+  **
+  **
+  **
+  **
+  *.
 EOS
 
 INPUT2 = <<~"EOS"
@@ -25,7 +28,7 @@ def solve(input_str)
   # vx, vy: 方向, step: 歩数
   vy = [1, 0, -1, 0]
   vx = [0, 1, 0, -1]
-  step = 1
+  step = 3
 
   # 入力
   h, w, y, x = input_str.split.map(&:to_i)
@@ -59,4 +62,4 @@ def solve(input_str)
   grid.map { |l| l.join }.join("\n")
 end
 
-puts solve(STDIN.read)
+puts solve(INPUT1)
