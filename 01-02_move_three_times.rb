@@ -62,4 +62,4 @@ def solve(input_str)
   grid.map { |l| l.join }.join("\n")
 end
 
-puts solve(INPUT1)
+puts solve(STDIN.read)
