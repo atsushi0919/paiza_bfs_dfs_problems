@@ -1,63 +1,78 @@
-=begin
-木における幅優先探索での探索 (paizaランク B 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 木における幅優先探索での探索
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__n_length
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__n_length
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-木を構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ辺の情報と、頂点番号 X が与えられるので、
-頂点 X からの距離が L である頂点の番号を全て出力してください。
-なお、木の 2 頂点 X, Y 間の距離とは、頂点 X から頂点 Y までを最短経路で移動したときに通る辺の数のことを指します。
+INPUT1 = <<~"EOS"
+  5 3 2
+  1 2
+  2 3
+  3 4
+  4 5
+EOS
+OUTPUT1 = <<~"EOS"
+  1
+  5
+EOS
 
-▼　下記解答欄にコードを記入してみよう
+INPUT2 = <<~"EOS"
+  7 5 2
+  7 5
+  5 6
+  1 5
+  1 4
+  1 2
+  1 3
+EOS
+OUTPUT2 = <<~"EOS"
+  2
+  3
+  4
+EOS
 
-入力される値
-N X L
-a_1 b_1
-...
-a_{N-1} b_{N-1}
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, x, l = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map { |l| l.split.map(&:to_i) }
 
+  # 隣接リスト
+  adjacency_list = Hash.new { [] }
+  paths.each do |a, b|
+    adjacency_list[a] <<= b
+    adjacency_list[b] <<= a
+  end
 
-・ 1 行目では、頂点の数 N と、頂点番号 X, 求めたい頂点の頂点 X からの距離 L が半角スペース区切りで与えられます。
-・ 続く N-1 行では、N-1 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ N-1) が与えられます。
+  # bfs
+  # 探索済みリスト
+  searched_list = Array.new(n)
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-・頂点 X からの距離が L である頂点の番号を、番号が昇順となるように改行区切りで全て出力してください。
+  # 最初の頂点: x, 距離: 0
+  queue = [[x, 0]]
+  # 処理結果を格納するリスト
+  results = []
+  while not queue.empty?
+    # dequeue
+    vertex, dist = queue.shift
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+    # 距離 l 未満の探索が終わったら終了
+    break if dist >= l
 
-・1 ≦ N ≦ 100,000
-・1 ≦ X ≦ N
-・頂点 X からの距離が L である頂点が存在することが保証されている
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ N-1)
-・a_i ≠ b_i (1 ≦ i ≦ N-1)
+    # 現在の頂点を探索済みにする
+    searched_list[vertex - 1] = true
 
-入力例1
-5 3 2
-1 2
-2 3
-3 4
-4 5
+    # 隣接する頂点を調べる
+    adjacency_list[vertex].each do |next_vertex|
+      # 探索済みならスキップ
+      next if searched_list[next_vertex - 1]
 
-出力例1
-1
-5
+      # 探索候補に追加
+      queue << [next_vertex, dist + 1]
 
-入力例2
-7 5 2
-7 5
-5 6
-1 5
-1 4
-1 2
-1 3
+      # 距離 l なら処理結果に追加
+      results <<= next_vertex if dist + 1 == l
+    end
+  end
+  # 処理結果を昇順ソートして返す
+  results.sort.join("\n")
+end
 
-出力例2
-2
-3
-4
-=end
+puts solve(STDIN.read)
