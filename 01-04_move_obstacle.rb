@@ -78,6 +78,8 @@ def solve(input_str)
       next if nx < 0 || nx > w - 1
       # 移動先が障害物なら追加しない
       next if grid[ny][nx] == "#"
+      # 調査済みなら追加しない
+      next if grid[ny][nx] == "*"
 
       # 移動可能なら次の地点を追加
       queue << [ny, nx, cs - 1]

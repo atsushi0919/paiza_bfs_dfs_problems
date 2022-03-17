@@ -53,6 +53,8 @@ def solve(input_str)
       # 有効範囲外なら追加しない
       next if ny < 0 || ny > h - 1
       next if nx < 0 || nx > w - 1
+      # 調査済みなら追加しない
+      next if grid[ny][nx] == "*"
 
       # 移動可能なら次の地点を追加
       queue << [ny, nx, cs - 1]
