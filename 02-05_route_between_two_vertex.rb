@@ -1,71 +1,167 @@
-=begin
-2 頂点間の最短経路 (paizaランク A 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 2 頂点間の最短経路 (paizaランク A 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__route_between_two_vertex
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__route_between_two_vertex
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-木を構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ辺の情報と頂点番号 X, Y が与えられます。
-頂点 X から 頂点 Y へ最短経路で移動したときに通過する頂点の番号を X , Y を含めて通る順に出力してください。
-なお、木における 2 頂点間の最短経路は一意に定まることが保証されています。
+INPUT1 = <<~"EOS"
+  5 1 5
+  1 3
+  3 2
+  3 4
+  4 5
+EOS
+OUTPUT1 = <<~"EOS"
+  1
+  3
+  4
+  5
+EOS
 
---- ヒント ---
-2 頂点間の距離を求める幅優先探索では、「頂点 X からの距離が i である頂点」から「頂点 X からの距離が i+1 である頂点」を求めていました。
-この求める情報に経路を追加することで同様に幅優先探索でこの問題を解くことができます。
-具体的には、「頂点 X からの距離が i である頂点までの経路」を元に「頂点 X からの距離が i+1 である頂点までの経路」
-を求める幅優先探索を、Y に到達するまで行ってみましょう。
+INPUT2 = <<~"EOS"
+  7 5 2
+  7 5
+  5 6
+  1 5
+  1 4
+  1 2
+  1 3
+EOS
+OUTPUT2 = <<~"EOS"
+  5
+  1
+  2
+EOS
 
-▼　下記解答欄にコードを記入してみよう
+class PriorityQueue
+  def initialize(elements: [], key: 0)
+    @data = []
+    @key = key
+    elements.each { |element| insert(element) }
+  end
 
-入力される値
-N X Y
-a_1 b_1
-...
-a_{N-1} b_{N-1}
+  def insert(element)
+    @data << element
+    up_heap
+  end
 
+  def extract
+    target_element = @data.shift
+    if size > 0
+      @data.unshift(@data.pop)
+      down_heap
+    end
+    target_element
+  end
 
-・ 1 行目では、頂点の数 N と、頂点番号 X, Y が半角スペース区切りで与えられます。
-・ 続く N-1 行では、N-1 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ N-1) が与えられます。
+  def size
+    @data.length
+  end
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-・頂点 X から 頂点 Y へ最短経路で移動したときに通過する頂点の番号を X , Y を含めて通る順に改行区切りで出力してください。
+  private
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+  def swap(a, b)
+    @data[a], @data[b] = @data[b], @data[a]
+  end
 
-・1 ≦ N ≦ 100,000
-・1 ≦ X, Y ≦ N
-・X ≠ Y
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ N-1)
-・a_i ≠ b_i (1 ≦ i ≦ N-1)
+  def parent_idx(idx)
+    idx / 2 + idx % 2 - 1
+  end
 
-入力例1
-5 1 5
-1 3
-3 2
-3 4
-4 5
+  def left_child_idx(idx)
+    (idx * 2) + 1
+  end
 
-出力例1
-1
-3
-4
-5
+  def right_child_idx(idx)
+    (idx * 2) + 2
+  end
 
-入力例2
-7 5 2
-7 5
-5 6
-1 5
-1 4
-1 2
-1 3
+  def has_child?(idx)
+    ((idx * 2) + 1) < size
+  end
 
-出力例2
-5
-1
-2
-=end
+  def up_heap
+    idx = size - 1
+    return if idx == 0
+    parent_idx = parent_idx(idx)
+    while @data[parent_idx][@key] > @data[idx][@key]
+      swap(parent_idx, idx)
+      return if parent_idx == 0
+      idx = parent_idx
+      parent_idx = parent_idx(idx)
+    end
+  end
+
+  def down_heap
+    idx = 0
+    while (has_child?(idx))
+      l_idx = left_child_idx(idx)
+      r_idx = right_child_idx(idx)
+      if @data[r_idx].nil?
+        target_idx = l_idx
+      else
+        target_idx = @data[l_idx][@key] <= @data[r_idx][@key] ? l_idx : r_idx
+      end
+      if @data[idx][@key] > @data[target_idx][@key]
+        swap(idx, target_idx)
+        idx = target_idx
+      else
+        return
+      end
+    end
+  end
+end
+
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, x, y = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map { |l| l.split.map(&:to_i) }
+
+  # 隣接リスト
+  adjacency_list = Hash.new { [] }
+  paths.each do |a, b|
+    adjacency_list[a] <<= b
+    adjacency_list[b] <<= a
+  end
+
+  # bfs(dijkstra)
+  # 探索済み 兼 前の頂点
+  prev_list = (1..n).map { |k| [k, nil] }.to_h
+
+  # 最初の頂点: x, 距離: 0, 前の頂点: nil
+  pq = PriorityQueue.new(elements: [[x, 0, -1]], key: 1)
+  # 最短経路
+  shortest_path = []
+  while pq.size > 0
+    # 最短の頂点を取り出す
+    vertex, dist, prev = pq.extract
+
+    # 探索済みならスキップ
+    next if not prev_list[vertex].nil?
+
+    # 現在の頂点を探索済みにする
+    prev_list[vertex] = prev
+
+    # 最短の頂点が y なら終了
+    if vertex == y
+      # ゴールからスタートに向かって経路を復元する
+      shortest_path << vertex
+      while prev > 0
+        shortest_path << prev
+        prev = prev_list[prev]
+      end
+      break
+    end
+
+    # 隣接する頂点を調べる
+    adjacency_list[vertex].each do |next_vertex|
+      # 探索済みならスキップ
+      next if not prev_list[next_vertex].nil?
+
+      # 探索候補に追加
+      pq.insert([next_vertex, dist + 1, vertex])
+    end
+  end
+  # x-y の最短経路を返す
+  shortest_path.reverse.join("\n")
+end
+
+puts solve(STDIN.read)
