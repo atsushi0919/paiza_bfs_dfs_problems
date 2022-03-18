@@ -1,60 +1,154 @@
-=begin
-2 頂点間の距離 (paizaランク A 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 2 頂点間の距離 (paizaランク A 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__shortest_path_length
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__shortest_path_length
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-多重辺・自己ループのない無向グラフを構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ M 本の辺の情報と頂点番号 X, Y が与えられるので、頂点 X から 頂点 Y までの距離を出力してください。
-また、頂点 X から頂点 Y までの経路が存在しない場合はそのことを指摘してください。
-なお、辺の重みは全て 1 であるものとし、グラフの 2 頂点 X, Y 間の距離とは、頂点 X から頂点 Y までを最短経路で移動したときに通る辺の数のことを指すものとします。
+INPUT1 = <<~"EOS"
+  5 6 1 5
+  1 2
+  2 3
+  1 4
+  2 4
+  2 5
+  5 3
+EOS
+OUTPUT1 = <<~"EOS"
+  2
+EOS
 
-▼　下記解答欄にコードを記入してみよう
+INPUT2 = <<~"EOS"
+  3 1 1 3
+  1 2
+EOS
+OUTPUT2 = <<~"EOS"
+  -1
+EOS
 
-入力される値
-N M X Y
-a_1 b_1
-...
-a_M b_M
+class PriorityQueue
+  def initialize(elements: [], key: 0)
+    @data = []
+    @key = key
+    elements.each { |element| insert(element) }
+  end
 
+  def insert(element)
+    @data << element
+    up_heap
+  end
 
-・ 1 行目では、頂点の数 N と辺の本数 M, 頂点番号 X, Y が半角スペース区切りで与えられます。
-・ 続く M 行では、M 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ M) が与えられます。
+  def extract
+    target_element = @data.shift
+    if size > 0
+      @data.unshift(@data.pop)
+      down_heap
+    end
+    target_element
+  end
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-頂点 X から 頂点 Y までの距離を出力してください。
-ただし、頂点 X から 頂点 Y まで到達することができない場合は -1 を出力してください。
+  def size
+    @data.length
+  end
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+  private
 
-・1 ≦ N ≦ 100,000
-・1 ≦ M ≦ min(N*(N-1)/2, 100,000)
-・1 ≦ X ≦ N
-・1 ≦ Y ≦ N
-・X ≠ Y
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ M)
-・a_i ≠ b_i (1 ≦ i ≦ M)
+  def swap(a, b)
+    @data[a], @data[b] = @data[b], @data[a]
+  end
 
-入力例1
-5 6 1 5
-1 2
-2 3
-1 4
-2 4
-2 5
-5 3
+  def parent_idx(idx)
+    idx / 2 + idx % 2 - 1
+  end
 
-出力例1
-2
+  def left_child_idx(idx)
+    (idx * 2) + 1
+  end
 
-入力例2
-3 1 1 3
-1 2
+  def right_child_idx(idx)
+    (idx * 2) + 2
+  end
 
-出力例2
--1
-=end
+  def has_child?(idx)
+    ((idx * 2) + 1) < size
+  end
+
+  def up_heap
+    idx = size - 1
+    return if idx == 0
+    parent_idx = parent_idx(idx)
+    while @data[parent_idx][@key] > @data[idx][@key]
+      swap(parent_idx, idx)
+      return if parent_idx == 0
+      idx = parent_idx
+      parent_idx = parent_idx(idx)
+    end
+  end
+
+  def down_heap
+    idx = 0
+    while (has_child?(idx))
+      l_idx = left_child_idx(idx)
+      r_idx = right_child_idx(idx)
+      if @data[r_idx].nil?
+        target_idx = l_idx
+      else
+        target_idx = @data[l_idx][@key] <= @data[r_idx][@key] ? l_idx : r_idx
+      end
+      if @data[idx][@key] > @data[target_idx][@key]
+        swap(idx, target_idx)
+        idx = target_idx
+      else
+        return
+      end
+    end
+  end
+end
+
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, m, x, y = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map { |l| l.split.map(&:to_i) }
+
+  # 隣接リスト
+  adjacency_list = Hash.new { [] }
+  paths.each do |a, b|
+    adjacency_list[a] <<= b
+    adjacency_list[b] <<= a
+  end
+
+  # bfs(dijkstra)
+  # 探索済みリスト
+  searched_list = Array.new(n)
+
+  # 最初の頂点: x, 距離: 0
+  pq = PriorityQueue.new(elements: [[x, 0]], key: 1)
+  # x-y の最短距離
+  shortest_dist = -1
+  while pq.size > 0
+    # 最短の頂点を取り出す
+    vertex, dist = pq.extract
+
+    # 探索済みならスキップ
+    next if searched_list[vertex - 1]
+
+    # 現在の頂点を探索済みにする
+    searched_list[vertex - 1] = true
+
+    # 最短の頂点が y なら終了
+    if vertex == y
+      shortest_dist = dist
+      break
+    end
+
+    # 隣接する頂点を調べる
+    adjacency_list[vertex].each do |next_vertex|
+      # 探索済みならスキップ
+      next if searched_list[next_vertex - 1]
+
+      # 探索候補に追加
+      pq.insert([next_vertex, dist + 1])
+    end
+  end
+  # x-y の最短距離を返す
+  shortest_dist
+end
+
+puts solve(STDIN.read)
