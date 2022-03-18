@@ -1,56 +1,90 @@
-=begin
-1 頂点の移動 (paizaランク B 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 1 頂点の移動 (paizaランク B 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__bfs_or_dfs_in_tree
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__bfs_or_dfs_in_tree
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-木を構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ辺の情報と頂点番号 X, Y が与えられます。
-頂点 X から次のルールにしたがって幅優先探索と深さ優先探索を行った時、頂点 Y を訪れるまでに注目する未訪問の頂点の数が少なくなるのはどちらの探索かを調べてください。
+INPUT1 = <<~"EOS"
+  6 1 5
+  1 2
+  1 3
+  1 4
+  2 5
+  3 6
+EOS
+OUTPUT1 = <<~"EOS"
+  dfs
+EOS
 
-幅優先探索
-・現在の頂点に隣接している全ての未訪問の頂点を、番号が一番小さい頂点から順に探索する。
+def get_shortest_path(adjacency_list, x, y, method)
+  # 探索済み、未探索リスト
+  n = adjacency_list.length
+  searched_list = Array.new(n, false)
+  unvisited_list = [x]
+  search_count = 0
+  while unvisited_list.length > 0
+    # 最小番号の頂点を取り出す
+    cv = if method == "dfs"
+        unvisited_list.pop
+      else
+        unvisited_list.shift
+      end
 
-深さ優先探索
-・現在の頂点に隣接している頂点のうち、未訪問かつ番号が一番小さい頂点を探索する。
+    # 訪問した回数
+    search_count += 1
 
-▼　下記解答欄にコードを記入してみよう
+    # 探索済みならスキップ
+    next if searched_list[cv - 1]
 
-入力される値
-N X Y
-a_1 b_1
-...
-a_{N-1} b_{N-1}
+    # 現在の頂点を探索済みにする
+    searched_list[cv - 1] = true
 
+    # 現在の頂点がゴールなら終了
+    return search_count if cv == y
 
-・ 1 行目では、頂点の数 N と、頂点番号 X, Y が半角スペース区切りで与えられます。
-・ 続く N-1 行では、N-1 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ N-1) が与えられます。
+    # 隣接する頂点を調べる
+    # ソート用に一時保管
+    tmp = []
+    adjacency_list[cv].each do |nv|
+      # 探索済みならスキップ
+      next if searched_list[nv - 1]
+      # 訪問リストに追加済みならスキップ
+      next if unvisited_list.include?(nv)
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-頂点 X から幅優先探索と深さ優先探索を行った時、
-・幅優先探索が先に頂点 Y を訪れる場合 "bfs" を出力してください。
-・深さ優先探索が先に頂点 Y を訪れる場合 "dfs" を出力してください。
-・2 つの探索が同時に頂点 Y を訪れる場合 "same" を出力してください。
+      # 探索候補に追加
+      tmp << nv
+    end
+    # 同じ層でソートして探索候補に追加
+    unvisited_list += if method == "dfs"
+        tmp.sort.reverse
+      else
+        tmp.sort
+      end
+  end
+end
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, x, y = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map { |line| line.split.map(&:to_i) }
 
-・1 ≦ N ≦ 200
-・1 ≦ X, Y ≦ N
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ N-1)
-・a_i ≠ b_i (1 ≦ i ≦ N-1)
+  # 隣接リスト
+  adjacency_list = Hash.new { [] }
+  paths.each do |a, b|
+    adjacency_list[a] <<= b
+    adjacency_list[b] <<= a
+  end
 
-入力例1
-6 1 5
-1 2
-1 3
-1 4
-2 5
-3 6
+  # 訪問回数をカウント
+  dfs_count = get_shortest_path(adjacency_list, x, y, "dfs")
+  bfs_count = get_shortest_path(adjacency_list, x, y, "bfs")
 
-出力例1
-dfs
-=end
+  # 結果を出力
+  if dfs_count < bfs_count
+    "dfs"
+  elsif dfs_count > bfs_count
+    "bfs"
+  else
+    "same"
+  end
+end
+
+puts solve(STDIN.read)
