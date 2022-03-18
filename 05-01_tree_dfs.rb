@@ -1,51 +1,76 @@
-=begin
-木の深さ優先探索 (paizaランク B 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 木の深さ優先探索 (paizaランク B 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__tree_dfs
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__tree_dfs
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-木を構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ辺の情報と、頂点番号 X が与えられるので、頂点 X から次のルールにしたがって深さ優先探索を行った時に訪れる頂点番号を順に出力してください。
+INPUT1 = <<~"EOS"
+  5 2
+  1 2
+  1 3
+  2 4
+  4 5
+EOS
 
-・現在の頂点に隣接している頂点のうち、未訪問かつ番号が一番小さい頂点を探索する。
+OUTPUT1 = <<~"EOS"
+  2
+  1
+  3
+  4
+  5
+EOS
 
-▼　下記解答欄にコードを記入してみよう
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, x = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map { |line| line.split.map(&:to_i) }
 
-入力される値
-N X
-a_1 b_1
-...
-a_{N-1} b_{N-1}
+  # 隣接リスト
+  adjacency_list = Hash.new { [] }
+  paths.each do |a, b|
+    adjacency_list[a] <<= b
+    adjacency_list[b] <<= a
+  end
+  adjacency_list
 
+  # dfs
+  # 探索済みの頂点
+  searched_list = Array.new(n, false)
+  # リストをスタックとして使う
+  stack = [x]
+  # 経路
+  visit_list = []
+  while stack.size > 0
+    # 最小番号の頂点を取り出す
+    vertex = stack.pop
 
-・ 1 行目では、頂点の数 N と、頂点番号 X が半角スペース区切りで与えられます。
-・ 続く N-1 行では、N-1 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ N-1) が与えられます。
+    # 探索済みならスキップ
+    next if searched_list[vertex - 1]
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-・与えられた木を頂点 X から深さ優先探索を行った時に訪れる頂点の番号を順に改行区切りで出力してください。
+    # 現在の頂点を探索済みにする
+    searched_list[vertex - 1] = true
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+    # 現在の頂点を訪問済みリストに追加する
+    visit_list << vertex
 
-・1 ≦ N ≦ 200
-・1 ≦ X ≦ N
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ N-1)
-・a_i ≠ b_i (1 ≦ i ≦ N-1)
+    # 全頂点を訪問したら終了
+    break if searched_list.all?
 
-入力例1
-5 2
-1 2
-1 3
-2 4
-4 5
+    # 隣接する頂点を調べる
+    # ソート用に一時保管
+    tmp = []
+    adjacency_list[vertex].each do |next_vertex|
+      # 探索済みならスキップ
+      next if searched_list[next_vertex - 1]
+      # 訪問リストに追加済みならスキップ
+      next if stack.include?(next_vertex)
 
-出力例1
-2
-1
-3
-4
-5
-=end
+      # 探索候補に追加
+      tmp << next_vertex
+    end
+    # 同じ層で降順ソートして探索候補に追加
+    stack += tmp.sort.reverse if not tmp.empty?
+  end
+  # 訪問リストを返す
+  visit_list.join("\n") << "\n"
+end
+
+puts solve(STDIN.read)
