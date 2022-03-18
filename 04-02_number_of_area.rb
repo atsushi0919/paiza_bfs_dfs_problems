@@ -1,53 +1,80 @@
-=begin
-領域の個数 (paizaランク A 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 領域の個数 (paizaランク A 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__number_of_area
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__number_of_area
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-何も置かれていないマス . と壁が置かれているマス # からなるマップが与えられるので、マップが壁によっていくつの区画に区切られているかを出力してください。
-なお、グリッドの左上・右上・左下・右下のマスをそれぞれ (0,0), (0,W-1), (H-1,0), (H-1,W-1) とします。
+INPUT1 = <<~"EOS"
+  5 5
+  ###..
+  ..#.#
+  #####
+  ...##
+  .###.
+EOS
+OUTPUT1 = <<~"EOS"
+  4
+EOS
 
-▼　下記解答欄にコードを記入してみよう
+INPUT2 = <<~"EOS"
+  3 3
+  .#.
+  #..
+  ...
+EOS
+OUTPUT2 = <<~"EOS"
+  2
+EOS
 
-入力される値
-H W
-S_1
-...
-S_H
+def solve(input_str)
+  # 方向設定
+  vy = [0, 1, 0, -1]
+  vx = [-1, 0, 1, 0]
 
+  # 入力
+  input_lines = input_str.split("\n")
+  h, w = input_lines.shift.split.map(&:to_i)
+  grid_map = input_lines.map(&:chars)
 
-・1 行で、グリッドの行数 H , 列数 W, スタート地点の座標を表す y, x が半角スペース区切りで与えられます。
+  # 領域の数
+  num_of_area = 0
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-・問題文の指示に従ってマスの座標を出力してください。
+  # スタート地点を全探索する
+  0.upto(h - 1) do |y|
+    0.upto(w - 1) do |x|
+      # "." 以外ならスキップ
+      next if grid_map[y][x] != "."
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
+      # 領域をカウントアップ
+      num_of_area += 1
 
-・1 ≦ H, W ≦ 100
-・S_i は '.' または '#' からなる W 文字の文字列(1 ≦ i ≦ H)
+      # dfs
+      # リストをスタックとして使う
+      stack = [[y, x]]
+      while not stack.empty?
+        # 探索候補末尾の要素を取り出す
+        cy, cx = stack.pop
 
-入力例1
-5 5
-###..
-..#.#
-#####
-...##
-.###.
+        # 探索済みの印を "*" とする
+        grid_map[cy][cx] = "*"
 
-出力例1
-4
+        # 隣接マスを調べる
+        vy.zip(vx).each do |dy, dx|
+          # 隣接マスの座標
+          ny = cy + dy
+          nx = cx + dx
 
-入力例2
-3 3
-.#.
-#..
-...
+          # 範囲外ならスキップ
+          next if ny < 0 || ny > h - 1
+          next if nx < 0 || nx > w - 1
+          # "." 以外なら追加しない
+          next if grid_map[ny][nx] != "."
 
-出力例2
-2
-=end
+          # 探索候補に追加する
+          stack << [ny, nx]
+        end
+      end
+    end
+  end
+  # 領域の数を返す
+  num_of_area
+end
+
+puts solve(STDIN.read)
