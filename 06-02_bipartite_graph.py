@@ -817,8 +817,7 @@ def is_bipartite(input_str):
     colors = [0 for i in range(n)]
 
     # (頂点、色)のタプルをスタックする。最初は(頂点0, 黒(1))
-    print(es[1][0])
-    stack = [(es[1][0], 1)]
+    stack = [(441, 1)]
     while stack:
         # スタックから最後に追加された(頂点, 色)をpop
         v, color = stack.pop()
@@ -826,6 +825,7 @@ def is_bipartite(input_str):
         colors[v] = color
         # 今の頂点から行けるところをチェック
         for to in es[v]:
+            print([color, colors[to]])
             # 同じ色が隣接してしまったらFalse
             if colors[to] == color:
                 return False

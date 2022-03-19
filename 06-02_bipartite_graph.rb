@@ -833,137 +833,57 @@ def solve(input_str)
   # 入力
   input_lines = input_str.split("\n")
   n, m = input_lines.shift.split.map(&:to_i)
-  paths = input_lines.map { |list| list.split.map(&:to_i) }
+  paths = input_lines.map do |line|
+    a, b = line.split.map(&:to_i)
+    [a - 1, b - 1]
+  end
 
   # 隣接リスト
   adjacency_list = Array.new(n) { [] }
   paths.each do |a, b|
-    a -= 1
-    b -= 1
     adjacency_list[a] << b
     adjacency_list[b] << a
   end
 
+  # 探索開始位置
+  start = nil
+  adjacency_list.each do |path|
+    if not path.empty?
+      start = path[0]
+      break
+    end
+  end
+
   # dfs
-  # 探索済みの頂点
-  searched_list = Array.new(n)
+  # 色: nil, 1, -1
+  colors = Array.new(n)
   # リストをスタックとして使う
-  stack = [[277, 1]]
+  stack = [[start, 1]]
   # フラグ
   bipartite_graph = true
   while stack.size > 0 && bipartite_graph
-    # 最小番号の頂点を取り出す
-    cv, type = stack.pop
+    # 末尾の頂点を取り出す
+    cv, color = stack.pop
 
     # 現在の頂点を探索済みにする
-    searched_list[cv] = type
+    colors[cv] = color
 
     # 隣接する頂点を調べる
     adjacency_list[cv].each do |nv|
-      # type が同じなら二部グラフでない
-      bipartite_graph = false if type == searched_list[nv]
+      # 色が同じなら二部グラフでない
+      if color == colors[nv]
+        bipartite_graph = false
+        break
+      end
       # 探索済みならスキップ
-      next if searched_list[nv] != 0
+      next if not colors[nv].nil?
 
       # 探索候補に追加
-      stack << [nv, -type]
+      stack << [nv, -color]
     end
   end
   # 二部グラフの判定結果を返す
   bipartite_graph ? "Yes" : "No"
 end
 
-puts solve(INPUT3)
-
-=begin
-# 入力のつもり。esはよくある隣接リストで辺を表したもの。
-N = 5
-#es = [[1,2,3],[0,2],[0,1],[0,4],[3]] # False
-es = [[1,3],[0,2],[1,3],[0,2,4],[3]] # True
-
-#n個の頂点の色を初期化。0:未着色、1:黒、-1:白
-colors = [0 for i in range(N)]
-
-#2部グラフならTrue, そうでなければFalse
-def is_bipartite():
-    stack = [(0,1)] # (頂点、色)のタプルをスタックする。最初は(頂点0, 黒(1))
-    while stack:
-        #スタックから最後に追加された(頂点, 色)をpop
-        v,color = stack.pop()
-        #今いる点を着色
-        colors[v] = color
-        #今の頂点から行けるところをチェック
-        for to in es[v]:
-            #同じ色が隣接してしまったらFalse
-            if colors[to] == color:
-                 return False
-            #未着色の頂点があったら反転した色と共にスタックに積む
-            if colors[to] == 0:
-                 stack.append((to, -color))
-    #調べ終わったら矛盾がないのでTrue
-    return True
-
-print(is_bipartite())
-
-二部グラフ判定 (paizaランク A 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
-
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__bipartite_graph
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-多重辺・自己ループのない無向グラフを構成する 1 〜 N の番号がつけられた頂点と
-それらを結ぶ M 本の辺の情報が与えられるので、このグラフが二部グラフかを判定してください。
-
-・二部グラフとは
-グラフの全ての頂点を 2 つの頂点集合に分割して、各集合間の頂点を互いに隣接しないようにできるグラフのことです。
-言い換えると、グラフの頂点を 2 色で塗り分けたとき、全ての辺の両端の色が異なるような塗り方が存在するとき、
-そのグラフは二部グラフといえます。
-例として、上のグラフは全ての辺の両端の頂点の色が異なるように 2 色で塗り分けられるため二部グラフであり、
-下のグラフはそのような塗り分けが存在しないため、二部グラフではありません。
-
-▼　下記解答欄にコードを記入してみよう
-
-入力される値
-N M
-a_1 b_1
-...
-a_M b_M
-
-・ 1 行目では、頂点の数 N と辺の本数 M が半角スペース区切りで与えられます。
-・ 続く M 行では、M 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ M) が与えられます。
-
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-与えられたグラフが二部グラフである場合は "Yes" を、そうでない場合には "No" を出力してください。
-
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
-
-・1 ≦ N ≦ 5,000
-・1 ≦ M ≦ min(N*(N-1)/2, 100,000)
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ M)
-・a_i ≠ b_i (1 ≦ i ≦ M)
-
-入力例1
-7 6
-1 2
-2 3
-2 4
-3 5
-3 6
-4 7
-
-出力例1
-Yes
-
-入力例2
-3 3
-1 2
-2 3
-3 1
-
-出力例2
-No
-=end
+puts solve(STDIN.read)
