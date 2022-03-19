@@ -1,57 +1,71 @@
-=begin
-連結成分の個数 (paizaランク A 相当)
-問題にチャレンジして、ユーザー同士で解答を教え合ったり、コードを公開してみよう！
+# 連結成分の個数 (paizaランク A 相当)
+# https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__number_of_connected_components
 
-シェア用URL:
-https://paiza.jp/works/mondai/bfs_dfs_problems/bfs_dfs_problems__number_of_connected_components
-問題文のURLをコピーする
- 下記の問題をプログラミングしてみよう！
-多重辺・自己ループのない無向グラフを構成する 1 〜 N の番号がつけられた頂点とそれらを結ぶ M 本の辺の情報が与えられるので、このグラフの連結成分の個数を求めてください。
+INPUT1 = <<~"EOS"
+  5 3
+  1 2
+  2 3
+  4 5
+EOS
+OUTPUT1 = <<~"EOS"
+  2
+EOS
 
-・連結成分とは
-任意の2頂点間にパスが存在するような部分グラフのうち極大なもののことです。
-例として、以下のようなグラフでは、連結成分は 4 個となります。
+INPUT2 = <<~"EOS"
+  3 1
+  1 2
+EOS
+OUTPUT2 = <<~"EOS"
+  2
+EOS
 
+def solve(input_str)
+  # 入力
+  input_lines = input_str.split("\n")
+  n, m = input_lines.shift.split.map(&:to_i)
+  paths = input_lines.map do |line|
+    a, b = line.split.map(&:to_i)
+    [a - 1, b - 1]
+  end
 
+  # 隣接リスト
+  adjacency_list = Array.new(n) { [] }
+  paths.each do |a, b|
+    adjacency_list[a] << b
+    adjacency_list[b] << a
+  end
 
-▼　下記解答欄にコードを記入してみよう
+  # 連結成分数
+  num_of_group = 0
+  # 探索済みリストを全探索
+  searched_list = Array.new(n, false)
+  0.upto(n - 1) do |idx|
+    # 探索済みならスキップ
+    next if searched_list[idx]
 
-入力される値
-N M
-a_1 b_1
-...
-a_M b_M
+    # 連結成分数をカウントアップ
+    num_of_group += 1
+    # dfs 探索開始
+    stack = [idx]
+    while not stack.empty?
+      # 末尾の頂点を取り出す
+      cv = stack.pop
 
+      # 現在の頂点を探索済みにする
+      searched_list[cv] = true
 
-・ 1 行目では、頂点の数 N と辺の本数 M が半角スペース区切りで与えられます。
-・ 続く M 行では、M 個の辺の両端の頂点の番号 a_i, b_i (1 ≦ i ≦ M) が与えられます。
+      # 隣接する頂点を調べる
+      adjacency_list[cv].each do |nv|
+        # 探索済みならスキップ
+        next if searched_list[nv]
 
-入力値最終行の末尾に改行が１つ入ります。
-文字列は標準入力から渡されます。 標準入力からの値取得方法はこちらをご確認ください
-期待する出力
-与えられたグラフの連結成分の個数を 1 行で出力してください。
+        # 探索候補に追加
+        stack << nv
+      end
+    end
+  end
+  # 連結成分数を返す
+  num_of_group
+end
 
-条件
-すべてのテストケースにおいて、以下の条件をみたします。
-
-・1 ≦ N ≦ 5,000
-・1 ≦ M ≦ min(N*(N-1)/2, 100,000)
-・1 ≦ a_i, b_i ≦ N (1 ≦ i ≦ M)
-・a_i ≠ b_i (1 ≦ i ≦ M)
-
-入力例1
-5 3
-1 2
-2 3
-4 5
-
-出力例1
-2
-
-入力例2
-3 1
-1 2
-
-出力例2
-2
-=end
+puts solve(STDIN.read)
